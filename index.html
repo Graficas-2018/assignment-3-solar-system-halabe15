@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+  <head>
+    <meta charset="utf-8">
+    <title>Solar System</title>
+    <script src="./js/planets.js" charset="utf-8"></script>
+    <script src="./js/index.js" charset="utf-8"></script>
+
+    <link rel="stylesheet" href="../libs/jquery-ui/jquery-ui.css" />
+    <link rel="stylesheet" href="../libs/colorpicker/css/colorpicker.css" />
+    <link rel="stylesheet" href="./css/main.css" />
+
+    <script src="../libs/jquery-3.3.1/jquery-3.3.1.js"></script>
+    <script src="../libs/jquery-ui/jquery-ui.js"></script>
+    <script src="../libs/three.js/three.js"></script>
+    <script src="../libs/colorpicker/js/colorpicker.js"></script>
+    <script src="./js/OrbitControls.js"></script>
+    <!-- <script src="./js/threejsBumpMap.js"></script> -->
+
+  </head>
+  <body>
+
+    <div id="container">
+        <canvas id="canvas"></canvas>
+    	<div id="title">
+    		Solar System
+    	</div>
+    	<div id="prompt">
+    		<!-- Drag the mouse to rotate the scene<br> -->
+    	</div>
+        <div id="status">
+    	    <!-- <div id="rotation">rotation: 0,0,0</div> -->
+    	    <!-- <div id="scale">scale: 1</div> -->
+        </div>
+    </div>
+
+    <script>
+      var canvas = document.getElementById("canvas");
+
+      // FullScreen
+      canvas.width  = window.innerWidth;
+      canvas.height = window.innerHeight;
+
+      // create the scene
+      createScene(canvas);
+
+      // Run the run loop
+      run();
+    </script>
+
+  </body>
+</html>
