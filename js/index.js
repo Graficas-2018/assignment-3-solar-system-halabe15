@@ -85,7 +85,7 @@ function createMaterials()
     moonGeometry[name] = new THREE.SphereGeometry((planets[name].sphere.radius * 0.05), planets[name].sphere.width, planets[name].sphere.height);
 
     if(name != 'sun')
-      materials[name] = new THREE.MeshPhongMaterial({ map: textureMap, bumpMap: bumpMap, bumpScale: 0.5 });
+      materials[name] = new THREE.MeshPhongMaterial({ map: textureMap, bumpMap: bumpMap, bumpScale: 0.005 });
     else
       materials[name] = new THREE.MeshBasicMaterial({ map: textureMap, bumpMap: bumpMap, bumpScale: 1 });
   }
@@ -217,10 +217,10 @@ function createSphere(planet, name, location = {x:0, y:0, z:0}){
     moonGroup.add( moonIndividual );
   }
 
-  for (var i = 0; i < 1; i++) {
-    asteroid = new THREE.Mesh(asteroidGeometry, materials['asteroid']);
-    root.add(asteroid);
-  }
+  // for (var i = 0; i < 1; i++) {
+  //   asteroid = new THREE.Mesh(asteroidGeometry, materials['asteroid']);
+  //   root.add(asteroid);
+  // }
 
 
 
