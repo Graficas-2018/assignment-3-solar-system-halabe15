@@ -9,7 +9,7 @@ var planets = {
     bump: '' ,
     sphere:{
       radius: scale * (earthRadius * 109.1),
-      width:20,
+      width: 20,
       height: 20
     },
     moons: 0,

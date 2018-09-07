@@ -1,7 +1,3 @@
-// Bump maps.
-// A bump map is a bitmap used to displace the surface normal vectors of a mesh to create an apparently bumpy surface. The pixel values of the bitmap are treated as heights rather than color values. For example, a pixel value of zero can mean no displacement from the surface, and nonzero values can mean positive displacement away from the surface. Typically, single-channel black and white bitmaps are used.
-
-
 var renderer = null,
 scene = null,
 camera = null,
@@ -9,6 +5,9 @@ root = null,
 group = null,
 sphere = null,
 sphereTextured = null;
+var moonGeometry = [];
+
+var animating = true;
 
 var duration = 10000; // ms
 var duration2 = 20000; // ms
@@ -19,6 +18,17 @@ var materials = {};
 var textureMap = [];
 var bumpMap = [];
 var controls = null;
+
+function onKeyDown ( event )
+{
+    switch ( event.keyCode ) {
+
+        case 32:
+            animating = !animating;
+            break;
+    }
+
+}
 
 function animate()
 {
@@ -34,22 +44,24 @@ function animate()
     var angle3 = Math.PI * 2 * fract3;
 
     // Rotate the sphere group about its Y axis
-    for(var i in group.children){
-      if (group.children[i].name == 'sun')
-        continue;
-      for (var moon in group.children[i].children) {
-        if (group.children[i].children[moon].name == 'MoonsGroup') {
-          group.children[i].children[moon].rotation.x += angle;
-          for (var planet in group.children[i].children) {
-            if (group.children[i].children[planet].name == 'planet') {
-              group.children[i].children[planet].rotation.z += angle2;
+    if(animating){
+      for(var i in group.children){
+        if (group.children[i].name == 'sun')
+          continue;
+        for (var moon in group.children[i].children) {
+          if (group.children[i].children[moon].name == 'MoonsGroup') {
+            group.children[i].children[moon].rotation.x += angle;
+            for (var planet in group.children[i].children) {
+              if (group.children[i].children[planet].name == 'planet') {
+                group.children[i].children[planet].rotation.z += angle2;
+              }
             }
           }
         }
+        group.children[i].rotation.z += angle3 / planets[group.children[i].name].distanceSun;
       }
-      group.children[i].rotation.z += angle3 / planets[group.children[i].name].distanceSun;
-      // console.log(group.children[i]);
     }
+
 }
 
 function run()
@@ -70,13 +82,21 @@ function createMaterials()
   for(var name in planets){
     textureMap = new THREE.TextureLoader().load(planets[name].map);
     bumpMap = new THREE.TextureLoader().load(planets[name].bump);
-    materials[name] = new THREE.MeshPhongMaterial({ map: textureMap, bumpMap: bumpMap, bumpScale: 1 });
+    moonGeometry[name] = new THREE.SphereGeometry((planets[name].sphere.radius * 0.05), planets[name].sphere.width, planets[name].sphere.height);
+
+    if(name != 'sun')
+      materials[name] = new THREE.MeshPhongMaterial({ map: textureMap, bumpMap: bumpMap, bumpScale: 0.5 });
+    else
+      materials[name] = new THREE.MeshBasicMaterial({ map: textureMap, bumpMap: bumpMap, bumpScale: 1 });
   }
+
+  asteroidGeometry = new THREE.SphereGeometry(earthRadius * 0.1, 20, 20);
+  materials['asteroid'] = new THREE.MeshPhongMaterial({ map: './images/asteroidmap.jpg', bumpMap: '', bumpScale: 0.0005 });
 
   // Moon Texture
   textureMap = new THREE.TextureLoader().load(moon.map);
   bumpMap = new THREE.TextureLoader().load(moon.bump);
-  materials['moon'] = new THREE.MeshPhongMaterial({ map: textureMap, bumpMap: bumpMap, bumpScale: 1 });
+  materials['moon'] = new THREE.MeshPhongMaterial({ map: textureMap, bumpMap: bumpMap, bumpScale: 0.005 });
 
   // Saturn Ring Texture
   textureMap = new THREE.TextureLoader().load(planets['saturn'].ring);
@@ -88,9 +108,11 @@ function createMaterials()
   bumpMap = new THREE.TextureLoader().load(planets['uranus'].trans);
   materials['uranusRing'] = new THREE.MeshPhongMaterial({ map: textureMap, bumpMap: bumpMap, bumpScale: 1, side: THREE.DoubleSide });
 
+
 }
 
 function createScene(canvas) {
+    document.addEventListener( 'keydown', onKeyDown, false );
 
     // Create the Three.js renderer and attach it to our canvas
     renderer = new THREE.WebGLRenderer( { canvas: canvas, antialias: true } );
@@ -106,7 +128,7 @@ function createScene(canvas) {
     scene.background = stars;
 
     // Add  a camera so we can view the scene
-    camera = new THREE.PerspectiveCamera( 45, canvas.width / canvas.height, 1, 100000 );
+    camera = new THREE.PerspectiveCamera( 45, canvas.width / canvas.height, 1, 100000000000 );
     camera.position.z = 10;
     controls = new THREE.OrbitControls( camera, renderer.domElement );
     camera.position.set(0, 0, 350);
@@ -170,28 +192,13 @@ function createSphere(planet, name, location = {x:0, y:0, z:0}){
     ringTextured = new THREE.Mesh(geometry, materials['uranusRing']);
     sphereTextured.add(ringTextured);
   }
-  // Add the sphere mesh to our group
 
   if (name != 'sun') {
-    // var curve = new THREE.EllipseCurve(
-    // 	0,  0,            // ax, aY
-    // 	planet.sphere.radius, planet.sphere.radius,           // xRadius, yRadius
-    // 	0,  2 * Math.PI,  // aStartAngle, aEndAngle
-    // 	false              // aRotation
-    // );
-    // var points = curve.getPoints( 1 );
-    // var geometry = new THREE.BufferGeometry().setFromPoints( points );
-    //
-    // var material = new THREE.LineBasicMaterial( { color : 0xffffff } );
-
-    // Create the final object to add to the scene
-    // var ellipse = new THREE.Line( geometry, material );
     geometry = new THREE.RingGeometry( location.x , location.x + 0.001, 100, 8, Math.PI);
     material = new THREE.MeshBasicMaterial( { color: 0x484848, wireframe: true } );
     ring = new THREE.Mesh(geometry, material);
     root.add(ring);
   }
-
 
   tmp = new THREE.Object3D;
   tmp.add(sphereTextured);
@@ -201,15 +208,18 @@ function createSphere(planet, name, location = {x:0, y:0, z:0}){
   moonGroup.name = "MoonsGroup";
 
   for (var i = 0; i < planet.moons; i++) {
-    geometry = new THREE.SphereGeometry((planet.sphere.radius * 0.1), planet.sphere.width, planet.sphere.height);
-    moonTextured = new THREE.Mesh(geometry, materials['moon']);
-
+    moonTextured = new THREE.Mesh(moonGeometry[name], materials['moon']);
     moonIndividual = new THREE.Object3D;
     moonIndividual.add(moonTextured);
-    moonIndividual.position.set((location.x + ((Math.random() - 0.5) * 2 * planet.sphere.radius)), (location.y + ((Math.random() - 0.5) * 2 * planet.sphere.radius)), (location.z + ((Math.random() - 0.5) * 2 * planet.sphere.radius)));
+    moonIndividual.position.set((location.x + ((Math.random() - 0.5) * 6 * planet.sphere.radius)), (location.y + ((Math.random() - 0.5) * 2 * planet.sphere.radius)), (location.z + ((Math.random() - 0.5) * 2 * planet.sphere.radius)));
     moonIndividual.name = 'moon'+i;
 
     moonGroup.add( moonIndividual );
+  }
+
+  for (var i = 0; i < 1; i++) {
+    asteroid = new THREE.Mesh(asteroidGeometry, materials['asteroid']);
+    root.add(asteroid);
   }
 
 
