@@ -14,7 +14,7 @@ var duration = 10000; // ms
 var duration2 = 20000; // ms
 var duration3 = 3000; // ms
 var currentTime = Date.now();
-
+var angleSum = 0
 var materials = {};
 var textureMap = [];
 var bumpMap = [];
@@ -38,11 +38,8 @@ function animate()
     var deltat = now - currentTime;
     currentTime = now;
     var fract = deltat / duration;
-    var fract2 = deltat / duration2;
-    var fract3 = deltat / duration3;
     var angle = Math.PI * 2 * fract;
-    var angle2 = Math.PI * 2 * fract2;
-    var angle3 = Math.PI * 2 * fract3;
+    var x =0 ,y=0,z=0;
 
     // Rotate the sphere group about its Y axis
     if(animating){
@@ -51,18 +48,32 @@ function animate()
           continue;
         if (group.children[i].name == 'asteroid') {
           group.children[i].rotation.z += angle / 5;
+          continue;
         }
-        for (var moon in group.children[i].children) {
-          if (group.children[i].children[moon].name == 'MoonsGroup') {
-            group.children[i].children[moon].rotation.x += angle;
-            for (var planet in group.children[i].children) {
-              if (group.children[i].children[planet].name == 'planet') {
-                group.children[i].children[planet].rotation.z += angle2;
-              }
-            }
-          }
-        }
-        group.children[i].rotation.z += angle3 / planets[group.children[i].name].distanceSun;
+        var d = planets[group.children[i].name].distanceSun;
+        var r = planets[group.children[i].name].sphere.radius;
+        angleSum += angle * 20;
+        x = d * (Math.cos(((angleSum / d) * (Math.PI / 180))));
+        y = d * (Math.sin(((angleSum / d) * (Math.PI / 180))));
+
+        group.children[i].position.set(x,y,0);
+        group.children[i].rotation.z += angle;
+
+        // for (var extra in group.children[i].children){
+        //   x = r * 2 * (Math.cos(((Math.random()) * (Math.PI / 180))));
+        //   y = r * 2 * (Math.sin(((Math.random()) * (Math.PI / 180))));
+        //   z = r * 2 * (Math.sin(((Math.random()) * (Math.PI / 180))));
+        //   group.children[i].children[extra].rotation.y += angle;
+        //   if(group.children[i].children[extra].name != 'ring'){
+        //     group.children[i].children[extra].position.x += x;
+        //     group.children[i].children[extra].position.y += y;
+        //     group.children[i].children[extra].position.z += z;
+        //   }
+        //     // group.children[i].children[extra].position.set(x,y,z);
+        // }
+            // for (var moon in group.children[i].children[planet].children)
+              // group.children[i].children[planet].children[moon].position.x += angle;
+        group.children[i].rotation.z += angle / d;
       }
     }
 
@@ -200,7 +211,7 @@ function createSphere(planet, name, location = {x:0, y:0, z:0}){
   sphereTextured.visible = true;
   // setMaterial("phong-textured");
   sphereTextured.position.set(location.x, location.y, location.z);
-  sphereTextured.name = 'planet';
+  sphereTextured.name = name;
 
 
 
@@ -208,12 +219,14 @@ function createSphere(planet, name, location = {x:0, y:0, z:0}){
     geometry = new THREE.RingGeometry( (planet.sphere.radius * 1.4), (planet.sphere.radius * 2), 32);
     geometry.rotateY(45);
     ringTextured = new THREE.Mesh(geometry, materials['saturnRing']);
+    ringTextured.name = 'ring';
     sphereTextured.add(ringTextured);
   } else if (name == 'uranus'){
     geometry = new THREE.RingGeometry( (planet.sphere.radius * 1.4), (planet.sphere.radius * 2), 32);
     geometry.rotateY(45);
     geometry.rotateX(45);
     ringTextured = new THREE.Mesh(geometry, materials['uranusRing']);
+    ringTextured.name = 'ring';
     sphereTextured.add(ringTextured);
   }
 
@@ -224,24 +237,15 @@ function createSphere(planet, name, location = {x:0, y:0, z:0}){
     root.add(ring);
   }
 
-  tmp = new THREE.Object3D;
-  tmp.add(sphereTextured);
-  tmp.name = name;
-
-  moonGroup = new THREE.Object3D;
-  moonGroup.name = "MoonsGroup";
-
   for (var i = 0; i < planet.moons; i++) {
     moonTextured = new THREE.Mesh(moonGeometry[name], materials['moon']);
-    moonIndividual = new THREE.Object3D;
-    moonIndividual.add(moonTextured);
-    moonIndividual.position.set((location.x + ((Math.random() - 0.5) * 6 * planet.sphere.radius)), (location.y + ((Math.random() - 0.5) * 2 * planet.sphere.radius)), (location.z + ((Math.random() - 0.5) * 2 * planet.sphere.radius)));
-    moonIndividual.name = 'moon'+i;
+    moon = new THREE.Object3D;
+    moon.add(moonTextured);
+    moon.position.set((Math.random() - 0.5) * 3 * planet.sphere.radius, (Math.random() - 0.5) * 3 * planet.sphere.radius, (Math.random() - 0.5) * 3 * planet.sphere.radius);
+    moon.name = 'moon';
 
-    moonGroup.add( moonIndividual );
+    sphereTextured.add( moon );
   }
 
-  tmp.add(moonGroup);
-
-  group.add( tmp );
+  group.add( sphereTextured );
 }
