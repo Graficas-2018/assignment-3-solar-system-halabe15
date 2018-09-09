@@ -4,7 +4,8 @@ camera = null,
 root = null,
 group = null,
 sphere = null,
-sphereTextured = null;
+sphereTextured = null,
+asteroidGeometry = null;
 var moonGeometry = [];
 
 var animating = true;
@@ -48,6 +49,9 @@ function animate()
       for(var i in group.children){
         if (group.children[i].name == 'sun')
           continue;
+        if (group.children[i].name == 'asteroid') {
+          group.children[i].rotation.z += angle / 5;
+        }
         for (var moon in group.children[i].children) {
           if (group.children[i].children[moon].name == 'MoonsGroup') {
             group.children[i].children[moon].rotation.x += angle;
@@ -90,8 +94,9 @@ function createMaterials()
       materials[name] = new THREE.MeshBasicMaterial({ map: textureMap, bumpMap: bumpMap, bumpScale: 1 });
   }
 
-  asteroidGeometry = new THREE.SphereGeometry(earthRadius * 0.1, 20, 20);
-  materials['asteroid'] = new THREE.MeshPhongMaterial({ map: './images/asteroidmap.jpg', bumpMap: '', bumpScale: 0.0005 });
+  asteroidGeometry = new THREE.SphereGeometry((earthRadius * 0.4) * scale, 20, 20);
+  var textureAsteroid = new THREE.TextureLoader().load('./images/asteroidmap.jpg');
+  materials['asteroid'] = new THREE.MeshPhongMaterial({ map: textureAsteroid, bumpMap: '', bumpScale: 0.0005 });
 
   // Moon Texture
   textureMap = new THREE.TextureLoader().load(moon.map);
@@ -131,7 +136,8 @@ function createScene(canvas) {
     camera = new THREE.PerspectiveCamera( 45, canvas.width / canvas.height, 1, 100000000000 );
     camera.position.z = 10;
     controls = new THREE.OrbitControls( camera, renderer.domElement );
-    camera.position.set(0, 0, 350);
+    camera.position.set(-15, -90, 40);
+    // camera.lookAt( scene.position );
     scene.add(camera);
 
     // Create a group to hold all the objects
@@ -163,6 +169,24 @@ function createScene(canvas) {
       if (group.children[i].name == 'sun')
         group.children[i].add(light);
 
+    asteroidGroup = new THREE.Object3D;
+    var x = 0, y = 0, r = 0,
+    min = planets['earth'].distanceSun * 1.01,
+    max = planets['mars'].distanceSun * .98,
+    z = 0;
+
+    for (var i = 0; i < 1440; i++) {
+      asteroid = new THREE.Mesh(asteroidGeometry, materials['asteroid']);
+      r = Math.random() * (max - min) + min;
+      x = r * Math.cos((i * (Math.PI / 180)));
+      y = r * Math.sin((i * (Math.PI / 180)));
+      z = (Math.random() * ((r * .05) - (r * -.05)) + (r * -.05));
+      asteroid.position.set(x,y,z);
+      asteroid.name = 'asteroid';
+      asteroidGroup.add(asteroid);
+    }
+    asteroidGroup.name = 'asteroid';
+    group.add(asteroidGroup);
     // Now add the group to our scene
     scene.add( root );
 }
@@ -216,13 +240,6 @@ function createSphere(planet, name, location = {x:0, y:0, z:0}){
 
     moonGroup.add( moonIndividual );
   }
-
-  // for (var i = 0; i < 1; i++) {
-  //   asteroid = new THREE.Mesh(asteroidGeometry, materials['asteroid']);
-  //   root.add(asteroid);
-  // }
-
-
 
   tmp.add(moonGroup);
 
